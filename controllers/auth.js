@@ -1,14 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
-const { Router } = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const prisma = require("../db");
 
-const prisma = new PrismaClient();
-const router = Router();
 const SECRET_KEY = "your_jwt_secret_key"; // Replace this with a secure key
 
-// Registration route
-router.post("/register", async (req, res) => {
+const register = async (req, res) => {
 	const { username, security_question, security_answer } = req.body;
 
 	// Check if the user already exists
@@ -46,9 +42,9 @@ router.post("/register", async (req, res) => {
 	return res
 		.status(200)
 		.send({ message: "User registered successfully", token });
-});
+};
 
-router.post("/security-question", async (req, res) => {
+const getSecurityQuestion = async (req, res) => {
 	const { username } = req.body;
 
 	// Check if the user exists
@@ -63,10 +59,9 @@ router.post("/security-question", async (req, res) => {
 	}
 
 	return res.status(200).send({ security_question: user.security_question });
-});
+};
 
-// Login route
-router.post("/login", async (req, res) => {
+const login = async (req, res) => {
 	const { username, security_answer, rememberMe = false } = req.body;
 
 	// Check if the user exists
@@ -100,6 +95,10 @@ router.post("/login", async (req, res) => {
 	);
 
 	return res.status(200).send({ message: "Login successful", token });
-});
+};
 
-module.exports = router;
+module.exports = {
+	register,
+	getSecurityQuestion,
+	login,
+};
