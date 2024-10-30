@@ -8,63 +8,98 @@ const router = Router();
 const SECRET_KEY = "your_jwt_secret_key"; // Replace this with a secure key
 
 // Registration route
-router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+router.post("/register", async (req, res) => {
+	const { username, security_question, security_answer } = req.body;
 
-    // Check if the user already exists
-    const userExist = await prisma.user.findUnique({
-        where: {
-            email
-        }
-    });
+	// Check if the user already exists
+	const userExist = await prisma.user.findUnique({
+		where: {
+			username,
+		},
+	});
 
-    if (userExist) {
-        return res.status(400).send('User already exists');
-    }
+	if (userExist) {
+		return res.status(400).send("User already exists");
+	}
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+	// Hash the password
+	const hashedAnswer = await bcrypt.hash(security_answer, 10);
 
-    // Create the user
-    const user = await prisma.user.create({
-        data: {
-            email,
-            password: hashedPassword // Save the hashed password
-        }
-    });
+	// Create the user
+	const user = await prisma.user.create({
+		data: {
+			username,
+			security_question,
+			security_answer: hashedAnswer,
+		},
+	});
 
-    return res.status(201).send({ message: "User registered successfully" });
+	// Generate a JWT token
+	const token = jwt.sign(
+		{ id: user.id, username: user.username },
+		SECRET_KEY,
+		{
+			expiresIn: "1d",
+		}
+	);
+
+	return res
+		.status(200)
+		.send({ message: "User registered successfully", token });
+});
+
+router.post("/security-question", async (req, res) => {
+	const { username } = req.body;
+
+	// Check if the user exists
+	const user = await prisma.user.findUnique({
+		where: {
+			username,
+		},
+	});
+
+	if (!user) {
+		return res.status(404).send("User not found");
+	}
+
+	return res.status(200).send({ security_question: user.security_question });
 });
 
 // Login route
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+router.post("/login", async (req, res) => {
+	const { username, security_answer, rememberMe = false } = req.body;
 
-    // Check if the user exists
-    const user = await prisma.user.findUnique({
-        where: {
-            email
-        }
-    });
+	// Check if the user exists
+	const user = await prisma.user.findUnique({
+		where: {
+			username,
+		},
+	});
 
-    if (!user) {
-        return res.status(404).send('User not found');
-    }
+	if (!user) {
+		return res.status(404).send("User not found");
+	}
 
-    // Compare the provided password with the hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+	// Compare the provided password with the hashed password
+	const isAnswerValid = await bcrypt.compare(
+		security_answer,
+		user.security_answer
+	);
 
-    if (!isPasswordValid) {
-        return res.status(401).send('Invalid password');
-    }
+	if (!isAnswerValid) {
+		return res.status(401).send("Wrong Answer");
+	}
 
-    // Generate a JWT token
-    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, {
-        expiresIn: '1h' // Token expires in 1 hour
-    });
+	// Generate a JWT token
+	const token = jwt.sign(
+		{ id: user.id, username: user.username },
+		SECRET_KEY,
+		{
+			expiresIn: rememberMe ? "7d" : "1d",
+		}
+	);
 
-    return res.status(200).send({ message: "Login successful", token });
+	return res.status(200).send({ message: "Login successful", token });
 });
 
 module.exports = router;
- 
