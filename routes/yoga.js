@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { saveLikedYoga, getLikedYoga } = require('../Controller/yogaController');
+const { saveLikedYoga, getLikedYoga } = require('../controllers/yoga');
 
 const router = Router();
 

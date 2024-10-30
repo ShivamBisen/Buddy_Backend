@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { uploadFile, getData } = require('../Controller/uploadController');
+const { uploadFile, getData } = require('../controllers/upload');
 
 const router = Router();
 
