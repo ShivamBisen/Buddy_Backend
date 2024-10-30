@@ -11,25 +11,24 @@ datasource db {
 }
 
 model User {
-  id       Int  @id @default(autoincrement())
-  email    String   @unique
-  name     String?
-  password String
-  data     Data[]
-  likedFeed LikedFeed[]
+  id                Int         @id @default(autoincrement())
+  username          String      @unique
+  security_question String
+  security_answer   String
+  data              Data[]
+  likedFeed         LikedFeed[]
 }
 
 model Data {
-  id     Int @id @default(autoincrement())
+  id     Int    @id @default(autoincrement())
   url    String
   userId Int
   user   User   @relation(fields: [userId], references: [id])
 }
 
-
 model LikedFeed {
   id     Int  @id @default(autoincrement())
   feedId Int
   userId Int
-  user   User    @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 }
